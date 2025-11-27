@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracketta | History</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-left">
+      <span class="logo">Tracketta</span>
+      <div class="nav-links">
+        <a href="index.html">Track</a>
+        <a href="history.html" class="active">History</a>
+        <a href="settings.html">Settings</a>
+        <a href="usage.html">Usage Rights</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <div class="filter-row">
+        <h2 style="margin:0">Recent tracking history</h2>
+        <div>
+          <select id="historyFilter">
+            <option value="all">All carriers</option>
+            <option value="UPS">UPS</option>
+            <option value="FedEx">FedEx</option>
+            <option value="USPS">USPS</option>
+            <option value="DHL">DHL</option>
+            <option value="LaserShip">LaserShip</option>
+            <option value="Amazon Logistics">Amazon Logistics</option>
+          </select>
+          <button class="primary" id="clearHistory">Clear history</button>
+        </div>
+      </div>
+      <div id="historyTable"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <div id="modalMount"></div>
+
+  <script src="components/dropdown.js"></script>
+  <script src="components/modal.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="components/timeline.js"></script>
+  <script src="api.js"></script>
+  <script src="historyPage.js"></script>
+</body>
+</html>
