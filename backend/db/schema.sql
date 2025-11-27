@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY,
-  theme TEXT DEFAULT 'light',
+  theme TEXT DEFAULT 'system',
   animationsEnabled INTEGER DEFAULT 1,
   defaultCarrier TEXT DEFAULT 'auto'
 );

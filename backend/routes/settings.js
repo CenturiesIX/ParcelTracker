@@ -4,7 +4,7 @@ const { get, run } = require('../db/database');
 
 const defaultSettings = {
   id: 1,
-  theme: 'light',
+  theme: 'system',
   animationsEnabled: 1,
   defaultCarrier: 'auto',
 };
@@ -19,7 +19,24 @@ const loadSettings = async () => {
     ]);
     return defaultSettings;
   }
-  return existing;
+
+  const normalizedTheme = ['light', 'dark', 'system'].includes(existing.theme) ? existing.theme : defaultSettings.theme;
+  const normalizedAnimations = typeof existing.animationsEnabled === 'number' ? existing.animationsEnabled : 1;
+  const normalizedCarrier = existing.defaultCarrier || defaultSettings.defaultCarrier;
+
+  if (
+    normalizedTheme !== existing.theme ||
+    normalizedAnimations !== existing.animationsEnabled ||
+    normalizedCarrier !== existing.defaultCarrier
+  ) {
+    await run('UPDATE settings SET theme = ?, animationsEnabled = ?, defaultCarrier = ? WHERE id = 1', [
+      normalizedTheme,
+      normalizedAnimations,
+      normalizedCarrier,
+    ]);
+  }
+
+  return { ...existing, theme: normalizedTheme, animationsEnabled: normalizedAnimations, defaultCarrier: normalizedCarrier };
 };
 
 router.get('/', async (req, res, next) => {
@@ -36,8 +53,11 @@ router.put('/', async (req, res, next) => {
     const { theme, animationsEnabled, defaultCarrier } = req.body;
     const settings = await loadSettings();
     const updated = {
-      theme: theme === 'dark' || theme === 'light' ? theme : settings.theme,
-      animationsEnabled: typeof animationsEnabled === 'number' ? animationsEnabled : settings.animationsEnabled,
+      theme: ['light', 'dark', 'system'].includes(theme) ? theme : settings.theme,
+      animationsEnabled:
+        typeof animationsEnabled === 'number'
+          ? animationsEnabled
+          : settings.animationsEnabled,
       defaultCarrier: defaultCarrier || settings.defaultCarrier,
     };
     await run('UPDATE settings SET theme = ?, animationsEnabled = ?, defaultCarrier = ? WHERE id = 1', [

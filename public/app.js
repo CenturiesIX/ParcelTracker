@@ -9,11 +9,24 @@ const carrierLabels = {
 };
 
 const state = {
-  settings: { theme: 'light', animationsEnabled: 1, defaultCarrier: 'auto' },
+  settings: { theme: 'system', animationsEnabled: 1, defaultCarrier: 'auto' },
 };
 
+const getSystemTheme = () => (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
 const applyTheme = (theme) => {
-  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+  const computedTheme = theme === 'system' ? getSystemTheme() : theme;
+  document.documentElement.setAttribute('data-theme', computedTheme === 'dark' ? 'dark' : 'light');
+};
+
+const watchSystemTheme = () => {
+  if (!window.matchMedia) return;
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  media.addEventListener('change', () => {
+    if (state.settings.theme === 'system') {
+      applyTheme('system');
+    }
+  });
 };
 
 const applyAnimations = (enabled) => {
@@ -34,7 +47,7 @@ const loadSettings = async () => {
     const res = await api.getSettings();
     if (res.success && res.data) {
       state.settings = res.data;
-      applyTheme(state.settings.theme);
+      applyTheme(state.settings.theme || 'system');
       applyAnimations(!!state.settings.animationsEnabled);
       document.dispatchEvent(new CustomEvent('settingsLoaded', { detail: state.settings }));
     }
@@ -49,7 +62,12 @@ const initGlobalUI = () => {
   hydrateNav();
 };
 
-document.addEventListener('DOMContentLoaded', loadSettings);
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(state.settings.theme);
+  applyAnimations(!!state.settings.animationsEnabled);
+  watchSystemTheme();
+  loadSettings();
+});
 document.addEventListener('DOMContentLoaded', initGlobalUI);
 
 // Home page logic

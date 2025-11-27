@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const themeLightBtn = document.getElementById('lightThemeBtn');
   const themeDarkBtn = document.getElementById('darkThemeBtn');
+  const themeSystemBtn = document.getElementById('systemThemeBtn');
   const animationToggle = document.getElementById('animationToggle');
   const defaultCarrier = document.getElementById('defaultCarrierSelect');
   const clearBtn = document.getElementById('clearDataBtn');
@@ -9,15 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!settings) return;
     themeLightBtn.classList.toggle('primary', settings.theme === 'light');
     themeDarkBtn.classList.toggle('primary', settings.theme === 'dark');
+    themeSystemBtn.classList.toggle('primary', settings.theme === 'system');
     animationToggle.classList.toggle('active', !!settings.animationsEnabled);
     defaultCarrier.value = settings.defaultCarrier || 'auto';
-    applyTheme(settings.theme);
+    applyTheme(settings.theme || 'system');
     applyAnimations(!!settings.animationsEnabled);
   };
 
   const saveSettings = async (payload) => {
     try {
-      const res = await api.saveSettings(payload);
+      const body = { ...state.settings, ...payload };
+      const res = await api.saveSettings(body);
       if (!res.success) throw new Error(res.message || 'Unable to save');
       state.settings = res.data;
       syncUI(res.data);
@@ -29,11 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   themeLightBtn.addEventListener('click', () => saveSettings({ theme: 'light' }));
   themeDarkBtn.addEventListener('click', () => saveSettings({ theme: 'dark' }));
-  animationToggle.addEventListener('click', () => saveSettings({ animationsEnabled: animationToggle.classList.toggle('active') ? 1 : 0 }));
+  themeSystemBtn.addEventListener('click', () => saveSettings({ theme: 'system' }));
+  animationToggle.addEventListener('click', () =>
+    saveSettings({ animationsEnabled: animationToggle.classList.toggle('active') ? 1 : 0 })
+  );
   defaultCarrier.addEventListener('change', () => saveSettings({ defaultCarrier: defaultCarrier.value }));
 
   clearBtn.addEventListener('click', () => {
-    saveSettings({ theme: 'light', animationsEnabled: 1, defaultCarrier: 'auto' });
+    saveSettings({ theme: 'system', animationsEnabled: 1, defaultCarrier: 'auto' });
   });
 
   // initial data
