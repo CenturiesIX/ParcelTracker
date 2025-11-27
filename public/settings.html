@@ -6,70 +6,83 @@
   <title>Tracketta | Settings</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body data-page="settings">
   <nav class="navbar">
-    <div class="nav-left">
-      <span class="logo">Tracketta</span>
-      <div class="nav-links">
-        <a href="index.html">Track</a>
-        <a href="history.html">History</a>
-        <a href="settings.html" class="active">Settings</a>
-        <a href="usage.html">Usage Rights</a>
-      </div>
+    <span class="logo">Tracketta</span>
+    <div class="nav-links">
+      <a href="index.html">Track</a>
+      <a href="history.html">History</a>
+      <a href="settings.html" class="active">Settings</a>
+      <a href="usage.html">Usage Rights</a>
     </div>
   </nav>
 
   <div class="container">
     <div class="card">
-      <h2>Appearance</h2>
-      <div class="toggle">
-        <label class="switch">
-          <input type="checkbox" id="themeToggle" />
-          <span class="slider"></span>
-        </label>
-        <span>Dark theme</span>
+      <div class="space-between">
+        <div>
+          <div class="section-title">Preferences</div>
+          <h2>Tailor Tracketta</h2>
+          <p class="muted">Your theme, animations, and default carrier apply across all pages instantly.</p>
+        </div>
+        <span class="badge">Saved automatically</span>
       </div>
-      <div class="toggle" style="margin-top:12px;">
-        <label class="switch">
-          <input type="checkbox" id="animationToggle" />
-          <span class="slider"></span>
-        </label>
-        <span>Enable animations</span>
-      </div>
-    </div>
 
-    <div class="card">
-      <h2>Preferences</h2>
-      <div style="margin-top:8px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-        <label for="defaultCarrier">Default carrier</label>
-        <select id="defaultCarrier">
-          <option value="auto">Auto detect</option>
-          <option value="ups">UPS</option>
-          <option value="fedex">FedEx</option>
-          <option value="usps">USPS</option>
-          <option value="dhl">DHL</option>
-          <option value="lasership">LaserShip</option>
-          <option value="amazon">Amazon Logistics</option>
-        </select>
-      </div>
-      <button class="primary" id="saveSettings" style="margin-top:16px;">Save settings</button>
-    </div>
+      <div class="settings-group">
+        <div class="setting-item">
+          <div>
+            <strong>Theme</strong>
+            <p class="muted">Toggle between light and dark for the best comfort.</p>
+          </div>
+          <div class="controls-row">
+            <button class="primary" id="lightThemeBtn">Light</button>
+            <button id="darkThemeBtn">Dark</button>
+          </div>
+        </div>
 
-    <div class="card">
-      <h2>Data</h2>
-      <p class="muted">Clear locally saved settings and refresh.</p>
-      <button class="primary" id="clearData">Clear data</button>
+        <div class="setting-item">
+          <div>
+            <strong>Animations</strong>
+            <p class="muted">Disable motion if you prefer a calmer interface.</p>
+          </div>
+          <div class="toggle" id="animationToggle"></div>
+        </div>
+
+        <div class="setting-item">
+          <div>
+            <strong>Default carrier</strong>
+            <p class="muted">Pre-selects a carrier for new lookups.</p>
+          </div>
+          <select id="defaultCarrierSelect">
+            <option value="auto">Auto detect</option>
+            <option value="ups">UPS</option>
+            <option value="fedex">FedEx</option>
+            <option value="usps">USPS</option>
+            <option value="dhl">DHL</option>
+            <option value="lasership">LaserShip</option>
+            <option value="amazon">Amazon Logistics</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <div>
+            <strong>Reset data</strong>
+            <p class="muted">Clear cached preferences back to defaults.</p>
+          </div>
+          <button id="clearDataBtn">Clear settings</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="toast-container" id="toastContainer"></div>
-  <div id="modalMount"></div>
 
   <script src="components/dropdown.js"></script>
   <script src="components/modal.js"></script>
   <script src="components/toast.js"></script>
   <script src="components/timeline.js"></script>
   <script src="api.js"></script>
+  <script src="app.js"></script>
   <script src="settingsPage.js"></script>
 </body>
 </html>

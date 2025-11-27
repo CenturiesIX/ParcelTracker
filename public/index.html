@@ -6,28 +6,27 @@
   <title>Tracketta | Track your package</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body data-page="home">
   <nav class="navbar">
-    <div class="nav-left">
-      <span class="logo">Tracketta</span>
-      <div class="nav-links">
-        <a href="index.html" class="active">Track</a>
-        <a href="history.html">History</a>
-        <a href="settings.html">Settings</a>
-        <a href="usage.html">Usage Rights</a>
-      </div>
+    <span class="logo">Tracketta</span>
+    <div class="nav-links">
+      <a href="index.html" class="active">Track</a>
+      <a href="history.html">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="usage.html">Usage Rights</a>
     </div>
   </nav>
 
   <div class="container">
     <div class="card hero">
       <div>
-        <h1>Track your package</h1>
-        <p>UPS, FedEx, USPS, DHL, LaserShip, Amazon Logistics — all in one clean interface.</p>
+        <div class="section-title">All carriers together</div>
+        <h1>Track your package in seconds</h1>
+        <p>UPS, FedEx, USPS, DHL, LaserShip, and Amazon Logistics with instant detection and history.</p>
       </div>
       <div class="form-row">
         <div class="input-group">
-          <input type="text" id="trackingNumber" placeholder="Enter tracking number" />
+          <input type="text" id="trackingNumber" placeholder="Enter tracking number" autocomplete="off" />
           <select id="carrierSelect">
             <option value="auto">Auto detect</option>
             <option value="ups">UPS</option>
@@ -38,11 +37,38 @@
             <option value="amazon">Amazon Logistics</option>
           </select>
         </div>
-        <button class="primary" id="trackBtn" disabled>Track package</button>
+        <button class="primary" id="trackBtn" disabled>
+          <span id="trackBtnText">Track package</span>
+        </button>
         <div id="detectedCarrier" class="muted"></div>
       </div>
     </div>
-    <div class="footer-note">Stay updated with Tracketta — professional package tracking made simple.</div>
+
+    <div class="card">
+      <div class="space-between">
+        <div>
+          <div class="section-title">Why Tracketta</div>
+          <h3>Professional tracking built for clarity</h3>
+        </div>
+        <span class="badge">Secure &amp; private</span>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <strong>Unified carriers</strong>
+          <p class="subtle-text">Auto detection plus manual override to ensure accuracy every time.</p>
+        </div>
+        <div class="summary-item">
+          <strong>Live feedback</strong>
+          <p class="subtle-text">Loading, success, and helpful error states keep you informed.</p>
+        </div>
+        <div class="summary-item">
+          <strong>History &amp; preferences</strong>
+          <p class="subtle-text">Your theme, animations, default carrier, and track log stay in sync.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">Tracketta keeps your shipment insight clean, responsive, and reliable.</div>
   </div>
 
   <div class="toast-container" id="toastContainer"></div>

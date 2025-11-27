@@ -1,76 +1,65 @@
-const containerEl = document.getElementById('resultsContainer');
+document.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const trackingNumber = params.get('trackingNumber');
+  const carrier = params.get('carrier') || 'auto';
+  const loading = document.getElementById('loadingState');
+  const errorState = document.getElementById('errorState');
+  const card = document.getElementById('resultCard');
+  const summaryGrid = document.getElementById('summaryGrid');
+  const statusBadge = document.getElementById('statusBadge');
+  const carrierLabel = document.getElementById('carrierLabel');
+  const trackingLabel = document.getElementById('trackingNumberLabel');
+  const timelineContainer = document.getElementById('timelineContainer');
+  const lastUpdatedLabel = document.getElementById('lastUpdatedLabel');
 
-const params = new URLSearchParams(window.location.search);
-const trackingNumber = params.get('trackingNumber');
-const carrier = params.get('carrier') || 'auto';
-
-const applyPreferences = async () => {
-  try {
-    const res = await api.getSettings();
-    if (res.success && res.data) {
-      document.body.classList.toggle('dark', res.data.theme === 'dark');
-      document.body.style.setProperty('scroll-behavior', res.data.animationsEnabled === 1 ? 'smooth' : 'auto');
-    }
-  } catch (error) {
-    /* ignore */
-  }
-};
-
-const renderError = (message) => {
-  containerEl.innerHTML = `
-    <div class="card">
-      <h2>We hit a snag</h2>
-      <p class="muted">${message || 'Unable to load tracking details right now.'}</p>
-      <a class="primary" href="index.html" style="display:inline-flex;align-items:center;justify-content:center;margin-top:12px;">Back to search</a>
-    </div>
-  `;
-};
-
-const renderSummary = (data) => {
-  const badgeClass = data.currentStatus && /delivered|out for delivery|available/i.test(data.currentStatus)
-    ? 'success' : /exception|delay/i.test(data.currentStatus) ? 'warning' : 'muted';
-
-  const timelineHtml = Timeline.render(data.checkpoints || []);
-
-  containerEl.innerHTML = `
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div>
-          <h2 style="margin:0">${data.carrierName}</h2>
-          <p class="muted" style="margin:4px 0 0">Tracking #${data.trackingNumber}</p>
-        </div>
-        <span class="badge ${badgeClass}">${data.currentStatus || 'Status unavailable'}</span>
-      </div>
-      <div class="summary-grid">
-        <div class="summary-item"><strong>Estimated</strong><br/>${data.estimatedDelivery || 'N/A'}</div>
-        <div class="summary-item"><strong>Origin</strong><br/>${data.origin || 'Unknown'}</div>
-        <div class="summary-item"><strong>Destination</strong><br/>${data.destination || 'Unknown'}</div>
-        <div class="summary-item"><strong>Last updated</strong><br/>${data.lastUpdated || 'Not available'}</div>
-      </div>
-    </div>
-    <div class="card">
-      <h3 style="margin-top:0">Timeline</h3>
-      ${timelineHtml}
-    </div>
-  `;
-};
-
-const load = async () => {
   if (!trackingNumber) {
-    renderError('Missing tracking number.');
+    errorState.style.display = 'block';
+    errorState.textContent = 'Missing tracking number';
+    card.style.display = 'none';
     return;
   }
-  await applyPreferences();
-  try {
-    const res = await api.track(trackingNumber, carrier);
-    if (!res.success || !res.data) {
-      renderError(res.message || 'Failed to fetch tracking.');
-      return;
-    }
-    renderSummary(res.data);
-  } catch (error) {
-    renderError('Failed to reach server.');
-  }
-};
 
-load();
+  const renderSummary = (data) => {
+    carrierLabel.textContent = data.carrierName;
+    trackingLabel.textContent = data.trackingNumber;
+    statusBadge.textContent = data.currentStatus;
+
+    summaryGrid.innerHTML = '';
+    const items = [
+      { label: 'Estimated delivery', value: data.estimatedDelivery || 'Not available' },
+      { label: 'Origin', value: data.origin || 'Not available' },
+      { label: 'Destination', value: data.destination || 'Not available' },
+    ];
+    items.forEach((item) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'summary-item';
+      wrap.innerHTML = `<strong>${item.label}</strong><p class="subtle-text">${item.value}</p>`;
+      summaryGrid.append(wrap);
+    });
+  };
+
+  const showError = (msg) => {
+    errorState.style.display = 'block';
+    errorState.textContent = msg;
+    card.style.display = 'none';
+  };
+
+  const setLoading = (isLoading) => {
+    loading.style.display = isLoading ? 'block' : 'none';
+    card.style.opacity = isLoading ? 0.5 : 1;
+  };
+
+  setLoading(true);
+  try {
+    const response = await api.track(trackingNumber, carrier);
+    if (!response.success || !response.data) throw new Error(response.message || 'Unable to load results');
+    const data = response.data;
+    renderSummary(data);
+    lastUpdatedLabel.textContent = data.lastUpdated ? `Last updated ${data.lastUpdated}` : 'Last update not available';
+    trackettaTimeline.renderTimeline(timelineContainer, data.checkpoints || []);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    setLoading(false);
+  }
+});

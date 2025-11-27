@@ -36,7 +36,7 @@ router.put('/', async (req, res, next) => {
     const { theme, animationsEnabled, defaultCarrier } = req.body;
     const settings = await loadSettings();
     const updated = {
-      theme: theme || settings.theme,
+      theme: theme === 'dark' || theme === 'light' ? theme : settings.theme,
       animationsEnabled: typeof animationsEnabled === 'number' ? animationsEnabled : settings.animationsEnabled,
       defaultCarrier: defaultCarrier || settings.defaultCarrier,
     };

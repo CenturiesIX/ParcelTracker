@@ -3,26 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tracketta | Tracking results</title>
+  <title>Tracketta | Results</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body data-page="results">
   <nav class="navbar">
-    <div class="nav-left">
-      <span class="logo">Tracketta</span>
-      <div class="nav-links">
-        <a href="index.html">Track</a>
-        <a href="history.html">History</a>
-        <a href="settings.html">Settings</a>
-        <a href="usage.html">Usage Rights</a>
-      </div>
+    <span class="logo">Tracketta</span>
+    <div class="nav-links">
+      <a href="index.html">Track</a>
+      <a href="history.html">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="usage.html">Usage Rights</a>
     </div>
   </nav>
 
-  <div class="container" id="resultsContainer">
-    <div class="card" id="loadingState">
-      <div class="loading"><span class="spinner"></span> Loading tracking details...</div>
+  <div class="container">
+    <div class="card" id="resultCard">
+      <div class="space-between">
+        <div>
+          <div class="section-title">Tracking summary</div>
+          <h2 id="carrierLabel">Loading...</h2>
+          <p class="muted" id="trackingNumberLabel"></p>
+        </div>
+        <div class="badge" id="statusBadge">Fetching...</div>
+      </div>
+      <div class="summary-grid" id="summaryGrid"></div>
     </div>
+
+    <div class="card">
+      <div class="space-between">
+        <div class="section-title">Timeline</div>
+        <span class="muted" id="lastUpdatedLabel"></span>
+      </div>
+      <div id="timelineContainer" class="timeline"></div>
+    </div>
+
+    <div id="loadingState" class="loading" style="display:none;">Loading your results...</div>
+    <div id="errorState" class="error-state" style="display:none;"></div>
   </div>
 
   <div class="toast-container" id="toastContainer"></div>
@@ -32,6 +49,7 @@
   <script src="components/toast.js"></script>
   <script src="components/timeline.js"></script>
   <script src="api.js"></script>
+  <script src="app.js"></script>
   <script src="resultsPage.js"></script>
 </body>
 </html>

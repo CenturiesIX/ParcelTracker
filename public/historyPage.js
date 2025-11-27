@@ -1,92 +1,67 @@
-const historyTable = document.getElementById('historyTable');
-const historyFilter = document.getElementById('historyFilter');
-const clearHistoryBtn = document.getElementById('clearHistory');
-const modalMount = document.getElementById('modalMount');
+document.addEventListener('DOMContentLoaded', () => {
+  const list = document.getElementById('historyList');
+  const emptyState = document.getElementById('historyEmpty');
+  const filter = document.getElementById('carrierFilter');
+  const clearBtn = document.getElementById('clearHistoryBtn');
 
-let historyData = [];
-
-const applyPreferences = async () => {
-  try {
-    const res = await api.getSettings();
-    if (res.success && res.data) {
-      document.body.classList.toggle('dark', res.data.theme === 'dark');
-      document.body.style.setProperty('scroll-behavior', res.data.animationsEnabled === 1 ? 'smooth' : 'auto');
+  const renderHistory = (items) => {
+    list.innerHTML = '';
+    if (!items.length) {
+      emptyState.style.display = 'block';
+      return;
     }
-  } catch (error) {
-    /* ignore */
-  }
-};
+    emptyState.style.display = 'none';
+    items.forEach((item) => {
+      const card = document.createElement('div');
+      card.className = 'history-item';
+      const header = document.createElement('div');
+      header.className = 'space-between';
+      header.innerHTML = `<strong>${item.trackingNumber}</strong><span class="tag">${item.carrier}</span>`;
+      const status = document.createElement('div');
+      status.className = 'muted';
+      status.textContent = item.status || 'No status available';
+      const meta = document.createElement('div');
+      meta.className = 'muted';
+      meta.textContent = `${item.lastUpdated || 'No timestamp'} · ${new Date(item.createdAt).toLocaleString()}`;
+      card.append(header, status, meta);
+      card.addEventListener('click', () => {
+        const params = new URLSearchParams({ trackingNumber: item.trackingNumber, carrier: item.carrier.toLowerCase() });
+        window.location.href = `results.html?${params.toString()}`;
+      });
+      list.append(card);
+    });
+  };
 
-const renderHistory = (items) => {
-  if (!items.length) {
-    historyTable.innerHTML = '<div class="empty-state">No history yet. Track a package to get started.</div>';
-    return;
-  }
-  const rows = items
-    .map(
-      (item) => `
-      <tr data-carrier="${item.carrier}" data-number="${item.trackingNumber}">
-        <td>${item.trackingNumber}</td>
-        <td>${item.carrier}</td>
-        <td>${item.status || ''}</td>
-        <td>${item.lastUpdated || ''}</td>
-        <td>${item.createdAt || ''}</td>
-      </tr>
-    `
-    )
-    .join('');
+  const loadHistory = async () => {
+    try {
+      const res = await api.history();
+      if (!res.success) throw new Error(res.message || 'Unable to load history');
+      const filtered = res.data.filter((item) => filter.value === 'all' || item.carrier.toLowerCase() === filter.value);
+      renderHistory(filtered);
+    } catch (err) {
+      trackettaToast.showToast(err.message, 'error');
+    }
+  };
 
-  historyTable.innerHTML = `
-    <table class="table">
-      <thead><tr><th>Tracking #</th><th>Carrier</th><th>Status</th><th>Last updated</th><th>Tracked at</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
+  filter.addEventListener('change', loadHistory);
 
-  historyTable.querySelectorAll('tbody tr').forEach((row) => {
-    row.addEventListener('click', () => {
-      const number = row.dataset.number;
-      const carrier = row.dataset.carrier.toLowerCase();
-      const params = new URLSearchParams({ trackingNumber: number, carrier });
-      window.location.href = `results.html?${params.toString()}`;
+  clearBtn.addEventListener('click', () => {
+    trackettaModal.createModal({
+      title: 'Clear history',
+      message: 'Remove all tracked items? This cannot be undone.',
+      confirmText: 'Clear',
+      onConfirm: async () => {
+        try {
+          const res = await api.clearHistory();
+          if (!res.success) throw new Error(res.message || 'Unable to clear history');
+          renderHistory([]);
+          trackettaToast.showToast('History cleared', 'success');
+        } catch (err) {
+          trackettaToast.showToast(err.message, 'error');
+        }
+      },
     });
   });
-};
 
-const applyFilter = () => {
-  const value = historyFilter.value;
-  const filtered = value === 'all' ? historyData : historyData.filter((h) => h.carrier === value);
-  renderHistory(filtered);
-};
-
-const loadHistory = async () => {
-  await applyPreferences();
-  const res = await api.history();
-  if (res.success && res.data) {
-    historyData = res.data;
-    applyFilter();
-  } else {
-    historyTable.innerHTML = '<div class="empty-state">Unable to load history.</div>';
-  }
-};
-
-clearHistoryBtn.addEventListener('click', () => {
-  Modal.confirm(modalMount, {
-    title: 'Clear history',
-    body: 'Are you sure you want to clear all tracking history? This cannot be undone.',
-    confirmLabel: 'Clear history',
-    onConfirm: async () => {
-      const res = await api.clearHistory();
-      if (res.success) {
-        historyData = [];
-        applyFilter();
-        Toast.show('History cleared', 'success');
-      } else {
-        Toast.show(res.message || 'Could not clear history', 'error');
-      }
-    },
-  });
+  loadHistory();
 });
-
-historyFilter.addEventListener('change', applyFilter);
-loadHistory();

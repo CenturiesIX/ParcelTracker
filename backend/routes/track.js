@@ -21,7 +21,7 @@ const scrapers = {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { trackingNumber, carrier } = req.body;
+    const { trackingNumber, carrier } = req.body || {};
     if (!trackingNumber || typeof trackingNumber !== 'string') {
       return res.status(400).json({ success: false, data: null, message: 'Tracking number is required' });
     }
@@ -37,16 +37,17 @@ router.post('/', async (req, res, next) => {
     const result = await scraper(normalizedNumber);
 
     if (!result) {
-      return res.status(500).json({ success: false, data: null, message: 'Unable to retrieve tracking data' });
+      return res.status(502).json({ success: false, data: null, message: 'Unable to retrieve tracking data' });
     }
 
-    const historyRow = saveHistory(result);
+    const normalizedResult = { ...result, carrierKey: detectedCarrier };
+    const historyRow = saveHistory(normalizedResult);
     await run(
       'INSERT INTO history (trackingNumber, carrier, status, lastUpdated, createdAt) VALUES (?, ?, ?, ?, datetime("now"))',
       [historyRow.trackingNumber, historyRow.carrier, historyRow.status, historyRow.lastUpdated]
     );
 
-    res.json({ success: true, data: result, message: 'Tracking retrieved' });
+    res.json({ success: true, data: normalizedResult, message: 'Tracking retrieved' });
   } catch (error) {
     next(error);
   }

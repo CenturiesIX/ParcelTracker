@@ -1,24 +1,43 @@
-const Modal = {
-  confirm(mount, { title, body, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onConfirm }) {
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
-    backdrop.innerHTML = `
-      <div class="modal">
-        <h3 style="margin-top:0;">${title}</h3>
-        <p class="muted">${body}</p>
-        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:18px;">
-          <button class="primary" id="confirmModal">${confirmLabel}</button>
-          <button id="cancelModal">${cancelLabel}</button>
-        </div>
-      </div>
-    `;
-    const cleanup = () => backdrop.remove();
-    backdrop.querySelector('#cancelModal').addEventListener('click', cleanup);
-    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) cleanup(); });
-    backdrop.querySelector('#confirmModal').addEventListener('click', async () => {
-      if (onConfirm) await onConfirm();
-      cleanup();
+(() => {
+  const createModal = ({ title, message, confirmText = 'Confirm', cancelText = 'Cancel', onConfirm }) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    const body = document.createElement('p');
+    body.className = 'muted';
+    body.textContent = message;
+
+    const actions = document.createElement('div');
+    actions.className = 'modal-actions';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = cancelText;
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'primary';
+    confirmBtn.textContent = confirmText;
+
+    const close = () => overlay.remove();
+
+    cancelBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    confirmBtn.addEventListener('click', () => {
+      onConfirm?.();
+      close();
     });
-    mount.appendChild(backdrop);
-  },
-};
+
+    actions.append(cancelBtn, confirmBtn);
+    modal.append(heading, body, actions);
+    overlay.append(modal);
+
+    const mountPoint = document.getElementById('modalRoot') || document.body;
+    mountPoint.append(overlay);
+    return overlay;
+  };
+
+  window.trackettaModal = { createModal };
+})();

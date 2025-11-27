@@ -1,86 +1,131 @@
-const trackingInput = document.getElementById('trackingNumber');
-const carrierSelect = document.getElementById('carrierSelect');
-const trackBtn = document.getElementById('trackBtn');
-const detectedCarrier = document.getElementById('detectedCarrier');
-
-const carrierPatterns = [
-  { key: 'ups', name: 'UPS', regex: /\b1Z[0-9A-Z]{16}\b/i },
-  { key: 'fedex', name: 'FedEx', regex: /\b(\d{12}|\d{15}|\d{20})\b/ },
-  { key: 'usps', name: 'USPS', regex: /\b\d{20,22}\b/ },
-  { key: 'dhl', name: 'DHL', regex: /\b\d{10}\b/ },
-  { key: 'lasership', name: 'LaserShip', regex: /\b(LL|LX)[0-9]{8,}/i },
-  { key: 'amazon', name: 'Amazon Logistics', regex: /\b(TBA|QX)[A-Z0-9]{12}\b/i },
-];
-
-let loading = false;
-
-const updateButtonState = () => {
-  const hasValue = trackingInput.value.trim().length > 0;
-  trackBtn.disabled = !hasValue || loading;
+const carrierLabels = {
+  auto: 'Auto detect',
+  ups: 'UPS',
+  fedex: 'FedEx',
+  usps: 'USPS',
+  dhl: 'DHL',
+  lasership: 'LaserShip',
+  amazon: 'Amazon Logistics',
 };
 
-const detectCarrier = () => {
-  const value = trackingInput.value.trim();
-  if (!value) {
-    detectedCarrier.textContent = '';
-    return null;
-  }
-  const match = carrierPatterns.find((p) => p.regex.test(value.replace(/\s+/g, '')));
-  if (match && carrierSelect.value === 'auto') {
-    detectedCarrier.textContent = `Detected carrier: ${match.name}`;
-    detectedCarrier.style.color = 'var(--primary)';
-    return match.key;
-  }
-  detectedCarrier.textContent = carrierSelect.value !== 'auto' ? `Manual carrier: ${carrierSelect.options[carrierSelect.selectedIndex].text}` : '';
-  detectedCarrier.style.color = 'var(--muted)';
-  return carrierSelect.value !== 'auto' ? carrierSelect.value : null;
+const state = {
+  settings: { theme: 'light', animationsEnabled: 1, defaultCarrier: 'auto' },
 };
-
-trackingInput.addEventListener('input', () => {
-  detectCarrier();
-  updateButtonState();
-});
-
-carrierSelect.addEventListener('change', () => {
-  detectCarrier();
-  updateButtonState();
-});
-
-trackBtn.addEventListener('click', () => {
-  const trackingNumber = trackingInput.value.trim();
-  const carrier = detectCarrier() || 'auto';
-  loading = true;
-  updateButtonState();
-  trackBtn.textContent = 'Tracking...';
-
-  const params = new URLSearchParams({ trackingNumber, carrier });
-  window.location.href = `results.html?${params.toString()}`;
-});
 
 const applyTheme = (theme) => {
-  document.body.classList.toggle('dark', theme === 'dark');
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
 };
 
 const applyAnimations = (enabled) => {
-  document.body.style.setProperty('scroll-behavior', enabled ? 'smooth' : 'auto');
+  document.body.classList.toggle('animations-off', !enabled);
 };
 
-const loadDefaults = async () => {
+const hydrateNav = () => {
+  const page = document.body.dataset.page;
+  document.querySelectorAll('.nav-links a').forEach((link) => {
+    const href = link.getAttribute('href');
+    const key = href.replace('.html', '').replace('index', 'home');
+    if (page === key) link.classList.add('active');
+  });
+};
+
+const loadSettings = async () => {
   try {
     const res = await api.getSettings();
     if (res.success && res.data) {
-      const { theme, animationsEnabled, defaultCarrier } = res.data;
-      applyTheme(theme);
-      applyAnimations(animationsEnabled === 1);
-      if (defaultCarrier && carrierSelect.querySelector(`option[value="${defaultCarrier}"]`)) {
-        carrierSelect.value = defaultCarrier;
-      }
+      state.settings = res.data;
+      applyTheme(state.settings.theme);
+      applyAnimations(!!state.settings.animationsEnabled);
+      document.dispatchEvent(new CustomEvent('settingsLoaded', { detail: state.settings }));
     }
-  } catch (error) {
-    /* ignore */
+  } catch (err) {
+    console.error(err);
+    trackettaToast.showToast('Unable to load settings, using defaults', 'error');
   }
 };
 
-loadDefaults();
-updateButtonState();
-detectCarrier();
+const initGlobalUI = () => {
+  trackettaDropdowns.initAllDropdowns();
+  hydrateNav();
+};
+
+document.addEventListener('DOMContentLoaded', loadSettings);
+document.addEventListener('DOMContentLoaded', initGlobalUI);
+
+// Home page logic
+if (document.body.dataset.page === 'home') {
+  document.addEventListener('DOMContentLoaded', () => {
+    const trackingInput = document.getElementById('trackingNumber');
+    const carrierSelect = document.getElementById('carrierSelect');
+    const trackBtn = document.getElementById('trackBtn');
+    const detectedCarrier = document.getElementById('detectedCarrier');
+    const trackBtnText = document.getElementById('trackBtnText');
+
+    const assignDefaultCarrier = (settings) => {
+      carrierSelect.value = (settings && settings.defaultCarrier) || 'auto';
+    };
+
+    assignDefaultCarrier(state.settings);
+    document.addEventListener('settingsLoaded', (event) => assignDefaultCarrier(event.detail));
+
+    const setButtonState = () => {
+      trackBtn.disabled = !trackingInput.value.trim();
+    };
+
+    const detectCarrier = (value) => {
+      const patterns = {
+        ups: /\b1Z[0-9A-Z]{16}\b/i,
+        fedex: /\b(\d{12}|\d{15}|\d{20})\b/,
+        usps: /\b\d{20,22}\b/,
+        dhl: /\b\d{10}\b/,
+        lasership: /\b(LL|LX)[0-9]{8,}/i,
+        amazon: /\b(TBA|QX)[A-Z0-9]{12}\b/i,
+      };
+      const cleaned = value.replace(/\s+/g, '');
+      const matched = Object.entries(patterns).find(([, regex]) => regex.test(cleaned));
+      return matched ? matched[0] : null;
+    };
+
+    const updateDetected = () => {
+      const value = trackingInput.value.trim();
+      const manual = carrierSelect.value !== 'auto';
+      if (!value) {
+        detectedCarrier.textContent = '';
+        return;
+      }
+      const detected = detectCarrier(value);
+      if (manual) {
+        detectedCarrier.textContent = `Using ${carrierLabels[carrierSelect.value]}`;
+      } else if (detected) {
+        detectedCarrier.textContent = `Detected ${carrierLabels[detected]}`;
+      } else {
+        detectedCarrier.textContent = 'Carrier not detected yet';
+      }
+    };
+
+    trackingInput.addEventListener('input', () => {
+      setButtonState();
+      updateDetected();
+    });
+
+    carrierSelect.addEventListener('change', updateDetected);
+
+    const setLoading = (loading) => {
+      trackBtn.disabled = loading || !trackingInput.value.trim();
+      trackBtnText.textContent = loading ? 'Preparing...' : 'Track package';
+    };
+
+    trackBtn.addEventListener('click', () => {
+      const trackingNumber = trackingInput.value.trim();
+      if (!trackingNumber) return;
+      setLoading(true);
+      detectedCarrier.textContent = '';
+      const detected = carrierSelect.value !== 'auto' ? carrierSelect.value : detectCarrier(trackingNumber) || 'auto';
+      const params = new URLSearchParams({ trackingNumber, carrier: detected });
+      window.location.href = `results.html?${params.toString()}`;
+    });
+
+    setButtonState();
+    updateDetected();
+  });
+}

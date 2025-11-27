@@ -1,66 +1,46 @@
-const themeToggle = document.getElementById('themeToggle');
-const animationToggle = document.getElementById('animationToggle');
-const defaultCarrierSelect = document.getElementById('defaultCarrier');
-const saveSettingsBtn = document.getElementById('saveSettings');
-const clearDataBtn = document.getElementById('clearData');
-const modalMountSettings = document.getElementById('modalMount');
+document.addEventListener('DOMContentLoaded', () => {
+  const themeLightBtn = document.getElementById('lightThemeBtn');
+  const themeDarkBtn = document.getElementById('darkThemeBtn');
+  const animationToggle = document.getElementById('animationToggle');
+  const defaultCarrier = document.getElementById('defaultCarrierSelect');
+  const clearBtn = document.getElementById('clearDataBtn');
 
-const applyTheme = (theme) => {
-  document.body.classList.toggle('dark', theme === 'dark');
-};
-
-const applyAnimations = (enabled) => {
-  document.body.style.setProperty('scroll-behavior', enabled ? 'smooth' : 'auto');
-};
-
-const loadSettings = async () => {
-  const res = await api.getSettings();
-  if (res.success && res.data) {
-    const { theme, animationsEnabled, defaultCarrier } = res.data;
-    themeToggle.checked = theme === 'dark';
-    animationToggle.checked = animationsEnabled === 1;
-    defaultCarrierSelect.value = defaultCarrier || 'auto';
-    applyTheme(theme);
-    applyAnimations(animationsEnabled === 1);
-  }
-};
-
-saveSettingsBtn.addEventListener('click', async () => {
-  const payload = {
-    theme: themeToggle.checked ? 'dark' : 'light',
-    animationsEnabled: animationToggle.checked ? 1 : 0,
-    defaultCarrier: defaultCarrierSelect.value,
+  const syncUI = (settings) => {
+    if (!settings) return;
+    themeLightBtn.classList.toggle('primary', settings.theme === 'light');
+    themeDarkBtn.classList.toggle('primary', settings.theme === 'dark');
+    animationToggle.classList.toggle('active', !!settings.animationsEnabled);
+    defaultCarrier.value = settings.defaultCarrier || 'auto';
+    applyTheme(settings.theme);
+    applyAnimations(!!settings.animationsEnabled);
   };
-  const res = await api.saveSettings(payload);
-  if (res.success) {
-    applyTheme(payload.theme);
-    applyAnimations(payload.animationsEnabled === 1);
-    Toast.show('Settings saved', 'success');
-  } else {
-    Toast.show(res.message || 'Failed to save settings', 'error');
-  }
-});
 
-clearDataBtn.addEventListener('click', () => {
-  Modal.confirm(modalMountSettings, {
-    title: 'Clear data',
-    body: 'Reset settings to defaults?',
-    confirmLabel: 'Clear',
-    onConfirm: async () => {
-      const res = await api.saveSettings({ theme: 'light', animationsEnabled: 1, defaultCarrier: 'auto' });
-      if (res.success) {
-        themeToggle.checked = false;
-        animationToggle.checked = true;
-        defaultCarrierSelect.value = 'auto';
-        applyTheme('light');
-        applyAnimations(true);
-        Toast.show('Settings cleared', 'success');
-      }
-    },
+  const saveSettings = async (payload) => {
+    try {
+      const res = await api.saveSettings(payload);
+      if (!res.success) throw new Error(res.message || 'Unable to save');
+      state.settings = res.data;
+      syncUI(res.data);
+      trackettaToast.showToast('Settings saved', 'success');
+    } catch (err) {
+      trackettaToast.showToast(err.message, 'error');
+    }
+  };
+
+  themeLightBtn.addEventListener('click', () => saveSettings({ theme: 'light' }));
+  themeDarkBtn.addEventListener('click', () => saveSettings({ theme: 'dark' }));
+  animationToggle.addEventListener('click', () => saveSettings({ animationsEnabled: animationToggle.classList.toggle('active') ? 1 : 0 }));
+  defaultCarrier.addEventListener('change', () => saveSettings({ defaultCarrier: defaultCarrier.value }));
+
+  clearBtn.addEventListener('click', () => {
+    saveSettings({ theme: 'light', animationsEnabled: 1, defaultCarrier: 'auto' });
+  });
+
+  // initial data
+  api.getSettings().then((res) => {
+    if (res.success && res.data) {
+      state.settings = res.data;
+      syncUI(res.data);
+    }
   });
 });
-
-themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked ? 'dark' : 'light'));
-animationToggle.addEventListener('change', () => applyAnimations(animationToggle.checked));
-
-loadSettings();
