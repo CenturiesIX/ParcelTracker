@@ -36,16 +36,29 @@ router.post('/', async (req, res, next) => {
     const scraper = scrapers[detectedCarrier];
     const result = await scraper(normalizedNumber);
 
-    if (!result) {
+    if (!result || !result.trackingNumber) {
       return res.status(502).json({ success: false, data: null, message: 'Unable to retrieve tracking data' });
     }
 
-    const normalizedResult = { ...result, carrierKey: detectedCarrier };
-    const historyRow = saveHistory(normalizedResult);
-    await run(
-      'INSERT INTO history (trackingNumber, carrier, status, lastUpdated, createdAt) VALUES (?, ?, ?, ?, datetime("now"))',
-      [historyRow.trackingNumber, historyRow.carrier, historyRow.status, historyRow.lastUpdated]
-    );
+    const normalizedResult = {
+      carrierKey: detectedCarrier,
+      carrierName: result.carrierName || detectedCarrier.toUpperCase(),
+      trackingNumber: result.trackingNumber,
+      currentStatus: result.currentStatus || 'Status unavailable',
+      estimatedDelivery: result.estimatedDelivery || null,
+      lastUpdated: result.lastUpdated || null,
+      origin: result.origin || null,
+      destination: result.destination || null,
+      checkpoints: Array.isArray(result.checkpoints) ? result.checkpoints : [],
+    };
+
+    if (normalizedResult.trackingNumber && normalizedResult.currentStatus) {
+      const historyRow = saveHistory(normalizedResult);
+      await run(
+        'INSERT INTO history (trackingNumber, carrier, status, lastUpdated, createdAt) VALUES (?, ?, ?, ?, datetime("now"))',
+        [historyRow.trackingNumber, historyRow.carrier, historyRow.status, historyRow.lastUpdated]
+      );
+    }
 
     res.json({ success: true, data: normalizedResult, message: 'Tracking retrieved' });
   } catch (error) {

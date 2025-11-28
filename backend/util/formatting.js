@@ -1,8 +1,9 @@
-const normalizeText = (text) => text ? text.replace(/\s+/g, ' ').trim() : '';
+const normalizeText = (text) => (text ? text.replace(/\s+/g, ' ').trim() : '');
 
-const safeValue = (value, fallback = '') => {
+const safeValue = (value, fallback = null) => {
   const normalized = normalizeText(value);
-  return normalized.length > 0 ? normalized : fallback;
+  if (normalized.length === 0 || normalized.toLowerCase() === 'undefined') return fallback;
+  return normalized;
 };
 
 const saveHistory = (result) => ({

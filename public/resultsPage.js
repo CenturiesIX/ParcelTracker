@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     carrierLabel.textContent = data.carrierName;
     trackingLabel.textContent = data.trackingNumber;
     statusBadge.textContent = data.currentStatus;
+    statusBadge.classList.toggle('success', /delivered|out for delivery|arrived/i.test(data.currentStatus));
+    statusBadge.classList.toggle('warning', /in transit|transit|shipped/i.test(data.currentStatus));
+    statusBadge.classList.toggle('danger', /exception|failed|error|unknown/i.test(data.currentStatus));
 
     summaryGrid.innerHTML = '';
     const items = [
@@ -56,7 +59,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = response.data;
     renderSummary(data);
     lastUpdatedLabel.textContent = data.lastUpdated ? `Last updated ${data.lastUpdated}` : 'Last update not available';
-    trackettaTimeline.renderTimeline(timelineContainer, data.checkpoints || []);
+    const checkpoints = Array.isArray(data.checkpoints) ? data.checkpoints : [];
+    if (!checkpoints.length) {
+      timelineContainer.innerHTML = '<div class="muted">No checkpoints available yet.</div>';
+    } else {
+      trackettaTimeline.renderTimeline(timelineContainer, checkpoints);
+    }
   } catch (err) {
     showError(err.message);
   } finally {

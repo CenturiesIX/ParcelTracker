@@ -46,10 +46,12 @@ const loadSettings = async () => {
   try {
     const res = await api.getSettings();
     if (res.success && res.data) {
-      state.settings = res.data;
+      state.settings = { ...state.settings, ...res.data };
       applyTheme(state.settings.theme || 'system');
       applyAnimations(!!state.settings.animationsEnabled);
       document.dispatchEvent(new CustomEvent('settingsLoaded', { detail: state.settings }));
+    } else {
+      applyTheme('system');
     }
   } catch (err) {
     console.error(err);

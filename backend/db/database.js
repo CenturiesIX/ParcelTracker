@@ -22,6 +22,28 @@ db.exec(schema, (err) => {
   }
 });
 
+const ensureSettingsRow = () =>
+  new Promise((resolve, reject) => {
+    db.get('SELECT * FROM settings WHERE id = 1', (err, row) => {
+      if (err) return reject(err);
+      if (row) return resolve(row);
+      const defaultRow = {
+        id: 1,
+        theme: 'system',
+        animationsEnabled: 1,
+        defaultCarrier: 'auto',
+      };
+      db.run(
+        'INSERT INTO settings (id, theme, animationsEnabled, defaultCarrier) VALUES (1, ?, ?, ?)',
+        [defaultRow.theme, defaultRow.animationsEnabled, defaultRow.defaultCarrier],
+        (insertErr) => {
+          if (insertErr) return reject(insertErr);
+          resolve(defaultRow);
+        }
+      );
+    });
+  });
+
 const run = (sql, params = []) => new Promise((resolve, reject) => {
   db.run(sql, params, function callback(err) {
     if (err) {
@@ -57,4 +79,7 @@ module.exports = {
   run,
   get,
   all,
+  ensureSettingsRow,
 };
+
+ensureSettingsRow().catch((err) => console.error('Failed to seed settings row', err));

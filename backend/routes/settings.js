@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { get, run } = require('../db/database');
+const { get, run, ensureSettingsRow } = require('../db/database');
 
 const defaultSettings = {
   id: 1,
@@ -10,6 +10,7 @@ const defaultSettings = {
 };
 
 const loadSettings = async () => {
+  await ensureSettingsRow();
   const existing = await get('SELECT * FROM settings WHERE id = 1');
   if (!existing) {
     await run('INSERT INTO settings (id, theme, animationsEnabled, defaultCarrier) VALUES (1, ?, ?, ?)', [
@@ -57,8 +58,10 @@ router.put('/', async (req, res, next) => {
       animationsEnabled:
         typeof animationsEnabled === 'number'
           ? animationsEnabled
+          : typeof animationsEnabled === 'boolean'
+          ? animationsEnabled ? 1 : 0
           : settings.animationsEnabled,
-      defaultCarrier: defaultCarrier || settings.defaultCarrier,
+      defaultCarrier: defaultCarrier || settings.defaultCarrier || 'auto',
     };
     await run('UPDATE settings SET theme = ?, animationsEnabled = ?, defaultCarrier = ? WHERE id = 1', [
       updated.theme,
