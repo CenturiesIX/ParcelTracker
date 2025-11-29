@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracketta | History</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="history">
+  <nav class="navbar">
+    <span class="logo">Tracketta</span>
+    <div class="nav-links">
+      <a href="index.html">Track</a>
+      <a href="history.html" class="active">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="usage.html">Usage Rights</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <div class="space-between">
+        <div>
+          <div class="section-title">Tracking history</div>
+          <h2>Recent lookups</h2>
+          <p class="muted">Open any entry to view its latest status.</p>
+        </div>
+        <div class="controls-row">
+          <select id="carrierFilter">
+            <option value="all">All carriers</option>
+            <option value="ups">UPS</option>
+            <option value="fedex">FedEx</option>
+            <option value="usps">USPS</option>
+            <option value="dhl">DHL</option>
+            <option value="lasership">LaserShip</option>
+            <option value="amazon">Amazon Logistics</option>
+          </select>
+          <button class="primary" id="clearHistoryBtn">Clear history</button>
+        </div>
+      </div>
+      <div id="historyList" class="table-list"></div>
+      <div id="historyEmpty" class="empty-state" style="display:none;">No history yet. Track a package to get started.</div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <div id="modalRoot"></div>
+
+  <script src="components/dropdown.js"></script>
+  <script src="components/modal.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="components/timeline.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script src="historyPage.js"></script>
+</body>
+</html>

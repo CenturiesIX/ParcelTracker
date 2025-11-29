@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracketta | Track your package</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="home">
+  <nav class="navbar">
+    <span class="logo">Tracketta</span>
+    <div class="nav-links">
+      <a href="index.html" class="active">Track</a>
+      <a href="history.html">History</a>
+      <a href="settings.html">Settings</a>
+      <a href="usage.html">Usage Rights</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card hero">
+      <div>
+        <div class="section-title">All carriers together</div>
+        <h1>Track your package in seconds</h1>
+        <p>UPS, FedEx, USPS, DHL, LaserShip, and Amazon Logistics with instant detection and history.</p>
+      </div>
+      <div class="form-row">
+        <div class="input-group">
+          <input type="text" id="trackingNumber" placeholder="Enter tracking number" autocomplete="off" />
+          <select id="carrierSelect">
+            <option value="auto">Auto detect</option>
+            <option value="ups">UPS</option>
+            <option value="fedex">FedEx</option>
+            <option value="usps">USPS</option>
+            <option value="dhl">DHL</option>
+            <option value="lasership">LaserShip</option>
+            <option value="amazon">Amazon Logistics</option>
+          </select>
+        </div>
+        <button class="primary" id="trackBtn" disabled>
+          <span id="trackBtnText">Track package</span>
+        </button>
+        <div id="detectedCarrier" class="muted"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="space-between">
+        <div>
+          <div class="section-title">Why Tracketta</div>
+          <h3>Professional tracking built for clarity</h3>
+        </div>
+        <span class="badge">Secure &amp; private</span>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <strong>Unified carriers</strong>
+          <p class="subtle-text">Auto detection plus manual override to ensure accuracy every time.</p>
+        </div>
+        <div class="summary-item">
+          <strong>Live feedback</strong>
+          <p class="subtle-text">Loading, success, and helpful error states keep you informed.</p>
+        </div>
+        <div class="summary-item">
+          <strong>History &amp; preferences</strong>
+          <p class="subtle-text">Your theme, animations, default carrier, and track log stay in sync.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">Tracketta keeps your shipment insight clean, responsive, and reliable.</div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="components/dropdown.js"></script>
+  <script src="components/modal.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="components/timeline.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

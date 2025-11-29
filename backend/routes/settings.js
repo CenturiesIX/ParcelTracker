@@ -1,0 +1,77 @@
+const express = require('express');
+const router = express.Router();
+const { get, run, ensureSettingsRow } = require('../db/database');
+
+const defaultSettings = {
+  id: 1,
+  theme: 'system',
+  animationsEnabled: 1,
+  defaultCarrier: 'auto',
+};
+
+const loadSettings = async () => {
+  await ensureSettingsRow();
+  const existing = await get('SELECT * FROM settings WHERE id = 1');
+  if (!existing) {
+    await run('INSERT INTO settings (id, theme, animationsEnabled, defaultCarrier) VALUES (1, ?, ?, ?)', [
+      defaultSettings.theme,
+      defaultSettings.animationsEnabled,
+      defaultSettings.defaultCarrier,
+    ]);
+    return defaultSettings;
+  }
+
+  const normalizedTheme = ['light', 'dark', 'system'].includes(existing.theme) ? existing.theme : defaultSettings.theme;
+  const normalizedAnimations = typeof existing.animationsEnabled === 'number' ? existing.animationsEnabled : 1;
+  const normalizedCarrier = existing.defaultCarrier || defaultSettings.defaultCarrier;
+
+  if (
+    normalizedTheme !== existing.theme ||
+    normalizedAnimations !== existing.animationsEnabled ||
+    normalizedCarrier !== existing.defaultCarrier
+  ) {
+    await run('UPDATE settings SET theme = ?, animationsEnabled = ?, defaultCarrier = ? WHERE id = 1', [
+      normalizedTheme,
+      normalizedAnimations,
+      normalizedCarrier,
+    ]);
+  }
+
+  return { ...existing, theme: normalizedTheme, animationsEnabled: normalizedAnimations, defaultCarrier: normalizedCarrier };
+};
+
+router.get('/', async (req, res, next) => {
+  try {
+    const settings = await loadSettings();
+    res.json({ success: true, data: settings, message: 'Settings loaded' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/', async (req, res, next) => {
+  try {
+    const { theme, animationsEnabled, defaultCarrier } = req.body;
+    const settings = await loadSettings();
+    const updated = {
+      theme: ['light', 'dark', 'system'].includes(theme) ? theme : settings.theme,
+      animationsEnabled:
+        typeof animationsEnabled === 'number'
+          ? animationsEnabled
+          : typeof animationsEnabled === 'boolean'
+          ? animationsEnabled ? 1 : 0
+          : settings.animationsEnabled,
+      defaultCarrier: defaultCarrier || settings.defaultCarrier || 'auto',
+    };
+    await run('UPDATE settings SET theme = ?, animationsEnabled = ?, defaultCarrier = ? WHERE id = 1', [
+      updated.theme,
+      updated.animationsEnabled,
+      updated.defaultCarrier,
+    ]);
+    res.json({ success: true, data: { id: 1, ...updated }, message: 'Settings saved' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+module.exports = router;
